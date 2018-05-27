@@ -18,15 +18,31 @@ def remove_punc(document_string):
 	clean = re.sub(r"[!@#$%^&*()-=_+|;':\",.<>?']+", " ", document_string)
 	return clean
 
-# opens web page
-html_one = urlopen('https://us.norton.com/internetsecurity-malware-what-is-a-computer-virus.html').read()
-html_two = urlopen('https://www.avg.com/en/signal/what-is-a-computer-virus').read()
-html_three = urlopen('https://blog.productcentral.aol.com/2012/08/14/what-are-computer-viruses').read()
+urllist = [
+'https://us.norton.com/internetsecurity-malware-what-is-a-computer-virus.html',
+'https://www.avg.com/en/signal/what-is-a-computer-virus',
+'https://blog.productcentral.aol.com/2012/08/14/what-are-computer-viruses'
+]
+
+# creates set containing one instance of every word that appears across the docs
+wordSet = set()
+
+for url in urllist:
+	# opens web page
+	html = urlopen(url).read()
+	# gets body text from web pages and cleans up the text
+	doc = remove_punc(web_page_parser.text_from_html(html).lower())
+	# tokenizes words
+	# 'bow' means 'bowl of words'
+	bow = doc.split(' ')
+	# removes empty strings
+	bow = filter(None, bow)
+	wordSet = wordSet.union(set(bow))
 
 # gets body text from web pages and cleans up the text
-docA = remove_punc(web_page_parser.text_from_html(html_one).lower())
-docB = remove_punc(web_page_parser.text_from_html(html_two).lower())
-docC = remove_punc(web_page_parser.text_from_html(html_three).lower())
+docA = remove_punc(web_page_parser.text_from_html(urlopen(urllist[0]).read()).lower())
+docB = remove_punc(web_page_parser.text_from_html(urlopen(urllist[1]).read()).lower())
+docC = remove_punc(web_page_parser.text_from_html(urlopen(urllist[2]).read()).lower())
 
 # tokenizes words
 # 'bow' means 'bowl of words'
@@ -40,7 +56,7 @@ bowB = filter(None, bowB)
 bowC = filter(None, bowC)
 
 # joins all the words together from each doc
-wordSet = set(bowA).union(set(bowB),set(bowC))
+# wordSet = set(bowA).union(set(bowB),set(bowC))
 
 # create a dictionary containing the # of times
 # a word appears in a doc, by default at first set to 0
