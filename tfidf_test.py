@@ -126,9 +126,34 @@ df_one = pd.DataFrame.from_dict(tfidfBowA, orient='index', columns=[urllist[0]])
 df_two = pd.DataFrame.from_dict(tfidfBowB, orient='index', columns=[urllist[1]])
 df_three = pd.DataFrame.from_dict(tfidfBowC, orient='index', columns=[urllist[2]])
 
+def avg_cond(c):
+	avg_list = []
+	if c[urllist[0]] > 0:
+		avg_list.append(c[urllist[0]])
+	if c[urllist[1]] > 0:
+		avg_list.append(c[urllist[1]])
+	if c[urllist[2]] > 0:
+		avg_list.append(c[urllist[2]])
+	if len(avg_list) > 0:
+		return sum(avg_list)/float(len(avg_list))
+	else:
+		return 0
+
+def count_docs(c):
+	count_list = []
+	if c[urllist[0]] > 0:
+		count_list.append(1)
+	if c[urllist[1]] > 0:
+		count_list.append(1)
+	if c[urllist[2]] > 0:
+		count_list.append(1)
+	return len(count_list)
+
 # join the dataframes together
 full_df = pd.concat([df_one, df_two, df_three], axis=1, join='inner')
 full_df['tfidf avg'] = full_df.mean(axis=1)
+full_df['tfidf avg used'] = full_df.apply(avg_cond, axis=1)
+full_df['docs with word'] = full_df.apply(count_docs, axis=1)
 full_df['tfidf max'] = full_df[[urllist[0], urllist[1], urllist[2]]].max(axis=1)
 #full_df['tfidf avg (used)'] = full_df[].mean(axis=1)
 
