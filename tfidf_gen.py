@@ -14,6 +14,7 @@ import pandas as pd
 import urllib2
 
 import web_page_parser
+import test_script
 
 def remove_punc(document_string):
 	# removes punctuation from strings
@@ -21,7 +22,8 @@ def remove_punc(document_string):
 	return clean
 
 def url_request(url):
-	req = urllib2.Request(url, headers={'Accept': 'text/html,application/xhtml+xml,*/*',"user-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36"})
+	req = urllib2.Request(url, headers={'Accept': 'text/html,application/xhtml+xml,*/*',
+										'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'})
 	return urllib2.urlopen(req).read()
 
 def count_words(tokenized, word_dict):
@@ -63,34 +65,24 @@ def computeTFIDF(tfBow, idfs):
 		tfidf[word] = val * idfs[word]
 	return tfidf
 
-# def avg_cond(c):
-# 	avg_list = []
-# 	if c[urllist[0]] > 0:
-# 		avg_list.append(c[urllist[0]])
-# 	if c[urllist[1]] > 0:
-# 		avg_list.append(c[urllist[1]])
-# 	if c[urllist[2]] > 0:
-# 		avg_list.append(c[urllist[2]])
-# 	if len(avg_list) > 0:
-# 		return sum(avg_list)/float(len(avg_list))
-# 	else:
-# 		return 0
+def avg_cond(c):
+	avg_list = []
+	for url in urllist:
+		if c[url] > 0:
+			avg_list.append(c[url])
+	if len(avg_list) > 0:
+		return sum(avg_list)/float(len(avg_list))
+	else:
+		return 0
 
-# def count_docs(c):
-# 	count_list = []
-# 	if c[urllist[0]] > 0:
-# 		count_list.append(1)
-# 	if c[urllist[1]] > 0:
-# 		count_list.append(1)
-# 	if c[urllist[2]] > 0:
-# 		count_list.append(1)
-# 	return len(count_list)
+def count_docs(c):
+	count_list = []
+	for url in urllist:
+		if c[url] > 0:
+			count_list.append(1)
+	return len(count_list)
 
-urllist = [
-'https://us.norton.com/internetsecurity-malware-what-is-a-computer-virus.html',
-'https://www.avg.com/en/signal/what-is-a-computer-virus',
-'https://blog.productcentral.aol.com/2012/08/14/what-are-computer-viruses'
-]
+urllist = test_script.generate_links(['what is identity theft'])
 
 # creates set containing one instance of every word that appears across the docs
 wordSet = set()
@@ -133,8 +125,8 @@ for url in urllist:
 full_df = pd.concat(df_list, axis=1, join='inner')
 
 full_df['tfidf avg'] = full_df.mean(axis=1)
-# full_df['tfidf avg used'] = full_df.apply(avg_cond, axis=1)
-# full_df['docs with word'] = full_df.apply(count_docs, axis=1)
+full_df['tfidf avg used'] = full_df.apply(avg_cond, axis=1)
+full_df['docs with word'] = full_df.apply(count_docs, axis=1)
 full_df['tfidf max'] = full_df[urllist].max(axis=1)
 
-full_df.to_csv('output3.csv', encoding='utf-8')
+full_df.to_csv('output7.csv', encoding='utf-8')
