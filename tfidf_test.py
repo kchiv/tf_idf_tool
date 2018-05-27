@@ -122,11 +122,14 @@ tfidfBowB = computeTFIDF(tfBowB, idfs)
 tfidfBowC = computeTFIDF(tfBowC, idfs)
 
 # create dataframe for each TF*IDF for each page
-df_one = pd.DataFrame.from_dict(tfBowA, orient='index')
-df_two = pd.DataFrame.from_dict(tfBowB, orient='index')
-df_three = pd.DataFrame.from_dict(tfBowC, orient='index')
+df_one = pd.DataFrame.from_dict(tfidfBowA, orient='index', columns=[urllist[0]])
+df_two = pd.DataFrame.from_dict(tfidfBowB, orient='index', columns=[urllist[1]])
+df_three = pd.DataFrame.from_dict(tfidfBowC, orient='index', columns=[urllist[2]])
 
 # join the dataframes together
 full_df = pd.concat([df_one, df_two, df_three], axis=1, join='inner')
+full_df['tfidf avg'] = full_df.mean(axis=1)
+full_df['tfidf max'] = full_df[[urllist[0], urllist[1], urllist[2]]].max(axis=1)
+#full_df['tfidf avg (used)'] = full_df[].mean(axis=1)
 
 full_df.to_csv('output.csv', encoding='utf-8')
