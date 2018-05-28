@@ -51,10 +51,10 @@ def scrape_google(search_term, number_results, language_code):
         raise Exception("Appears to be an issue with your connection")
 
 
-def generate_links(keyword, result_num):
+def generate_links(keyword):
     data = []
     try:
-        results = scrape_google(keyword, result_num, "en")
+        results = scrape_google(keyword, 10, "en")
         for result in results:
             data.append(result)
     except Exception as e:

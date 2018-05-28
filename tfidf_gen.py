@@ -12,9 +12,10 @@ import math
 import re
 import pandas as pd
 import urllib2
+import requests
 
 import web_page_parser
-import test_script
+import google_parser
 
 def remove_punc(document_string):
 	# removes punctuation from strings
@@ -22,9 +23,9 @@ def remove_punc(document_string):
 	return clean
 
 def url_request(url):
-	req = urllib2.Request(url, headers={'Accept': 'text/html,application/xhtml+xml,*/*',
+	req = requests.get(url, headers={'Accept': 'text/html,application/xhtml+xml,*/*',
 										'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'})
-	return urllib2.urlopen(req).read()
+	return req.text
 
 def count_words(tokenized, word_dict):
 	# counts number of times word appears in tokenized list
@@ -54,7 +55,10 @@ def computeIDF(docList):
 
 	# divide N by denominator above, take the log of that
 	for word, val in idfDict.iteritems():
-		idfDict[word] = math.log(N/float(val))
+		if val > 0:
+			idfDict[word] = math.log(N/float(val))
+		else:
+			idfDict[word] = 0
 
 	return idfDict
 
@@ -82,7 +86,11 @@ def count_docs(c):
 			count_list.append(1)
 	return len(count_list)
 
-urllist = test_script.generate_links(['what is identity theft'])
+# kywd = raw_input('What would you like to search?')
+# result_num = raw_input('How many results would you like?')
+
+urllist = google_parser.generate_links('what is identity theft')
+print urllist
 
 # creates set containing one instance of every word that appears across the docs
 wordSet = set()
