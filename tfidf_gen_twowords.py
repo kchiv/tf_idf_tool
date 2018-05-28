@@ -58,10 +58,7 @@ def computeIDF(docList):
 
 	# divide N by denominator above, take the log of that
 	for word, val in idfDict.iteritems():
-		if val > 0:
-			idfDict[word] = math.log(N/float(val))
-		else:
-			idfDict[word] = 0
+		idfDict[word] = math.log(N/1+float(val))
 
 	return idfDict
 
@@ -107,6 +104,8 @@ for url in urllist:
 	bow = doc.split(' ')
 	# removes empty strings
 	bow = filter(None, [bow[i]+' '+bow[i+1] for i in range(len(bow)-1)])
+	if len(bow) < 50:
+		urllist.remove(url)
 	wordSet = wordSet.union(set(bow))
 
 wordDictList = []
