@@ -31,7 +31,10 @@ def count_words(tokenized, word_dict):
 	# counts number of times word appears in tokenized list
 	# and iterates dictionary value by 1 for each count
 	for word in tokenized:
-		word_dict[word]+=1
+		try:
+			word_dict[word]+=1
+		except KeyError:
+			pass
 	return word_dict
 
 def computeTF(wordDict, bow):
@@ -103,15 +106,15 @@ for url in urllist:
 	# 'bow' means 'bowl of words'
 	bow = doc.split(' ')
 	# removes empty strings
-	bow = filter(None, bow)
+	bow = filter(None, [bow[i]+' '+bow[i+1] for i in range(len(bow)-1)])
 	wordSet = wordSet.union(set(bow))
-
 
 wordDictList = []
 for url in urllist:
-	bow = filter(None, remove_punc(web_page_parser.text_from_html(url_request(url)).lower()).split(' '))
+	bowOne = remove_punc(web_page_parser.text_from_html(url_request(url)).lower()).split()
+	bowOne = filter(None, [bowOne[i]+' '+bowOne[i+1] for i in range(len(bowOne)-1)])
 	wordSetOne = dict.fromkeys(wordSet, 0)
-	wordDict = count_words(bow, wordSetOne)
+	wordDict = count_words(bowOne, wordSetOne)
 	wordDictList.append(wordDict)
 
 idfs = computeIDF(wordDictList)
@@ -119,10 +122,11 @@ idfs = computeIDF(wordDictList)
 df_list = []
 # gets body text from web pages and cleans up the text
 for url in urllist:
-	bowTwo = filter(None, remove_punc(web_page_parser.text_from_html(url_request(url)).lower()).split(' '))
+	bowTwo = remove_punc(web_page_parser.text_from_html(url_request(url)).lower()).split()
+	bowTwo = filter(None, [bowTwo[i]+' '+bowTwo[i+1] for i in range(len(bowTwo)-1)])
 	wordSetTwo = dict.fromkeys(wordSet, 0)
 	wordDictTwo = count_words(bowTwo, wordSetTwo)
-	tfBow = computeTF(wordDictTwo, bow)
+	tfBow = computeTF(wordDictTwo, bowTwo)
 	tfidfBow = computeTFIDF(tfBow, idfs)
 	df = pd.DataFrame.from_dict(tfidfBow, orient='index', columns=[url])
 	df_list.append(df)
