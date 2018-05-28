@@ -51,16 +51,14 @@ def scrape_google(search_term, number_results, language_code):
         raise Exception("Appears to be an issue with your connection")
 
 
-def generate_links(kywd):
-    keywords = kywd
+def generate_links(keyword, result_num):
     data = []
-    for keyword in keywords:
-        try:
-            results = scrape_google(keyword, 3, "en")
-            for result in results:
-                data.append(result)
-        except Exception as e:
-            print(e)
-        finally:
-            time.sleep(10)
+    try:
+        results = scrape_google(keyword, result_num, "en")
+        for result in results:
+            data.append(result)
+    except Exception as e:
+        print(e)
+    # finally:
+    #     time.sleep(10)
     return [val['link'] for val in data]
