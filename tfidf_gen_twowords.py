@@ -42,7 +42,7 @@ def computeTF(wordDict, bow):
 	tfDict = {}
 	bowCount = len(bow)
 	for word, count in wordDict.iteritems():
-		tfDict[word] = count / float(bowCount)
+		tfDict[word] = count / (1 + float(bowCount))
 	return tfDict
 
 def computeIDF(docList):
@@ -58,7 +58,7 @@ def computeIDF(docList):
 
 	# divide N by denominator above, take the log of that
 	for word, val in idfDict.iteritems():
-		idfDict[word] = math.log(N/1+float(val))
+		idfDict[word] = math.log(N/(1+float(val)))
 
 	return idfDict
 
@@ -71,7 +71,7 @@ def computeTFIDF(tfBow, idfs):
 
 def avg_cond(c):
 	avg_list = []
-	for url in urllist:
+	for url in urllist_two:
 		if c[url] > 0:
 			avg_list.append(c[url])
 	if len(avg_list) > 0:
@@ -81,18 +81,21 @@ def avg_cond(c):
 
 def count_docs(c):
 	count_list = []
-	for url in urllist:
+	for url in urllist_two:
 		if c[url] > 0:
 			count_list.append(1)
 	return len(count_list)
 
 kywd = raw_input('What would you like to search?')
+result_num = int(raw_input('How many results would you like?'))
 
-urllist = google_parser.generate_links(kywd)
+urllist = google_parser.generate_links(kywd, result_num)
 print urllist
+print len(urllist)
 
 # creates set containing one instance of every word that appears across the docs
 wordSet = set()
+urllist_two = []
 
 for url in urllist:
 	# opens web page
@@ -104,12 +107,15 @@ for url in urllist:
 	bow = doc.split(' ')
 	# removes empty strings
 	bow = filter(None, [bow[i]+' '+bow[i+1] for i in range(len(bow)-1)])
-	if len(bow) < 50:
-		urllist.remove(url)
+	print url, len(bow)
+	if len(bow) > 50:
+		urllist_two.append(url)
 	wordSet = wordSet.union(set(bow))
 
+print urllist_two
+
 wordDictList = []
-for url in urllist:
+for url in urllist_two:
 	bowOne = remove_punc(web_page_parser.text_from_html(url_request(url)).lower()).split()
 	bowOne = filter(None, [bowOne[i]+' '+bowOne[i+1] for i in range(len(bowOne)-1)])
 	wordSetOne = dict.fromkeys(wordSet, 0)
@@ -120,7 +126,7 @@ idfs = computeIDF(wordDictList)
 
 df_list = []
 # gets body text from web pages and cleans up the text
-for url in urllist:
+for url in urllist_two:
 	bowTwo = remove_punc(web_page_parser.text_from_html(url_request(url)).lower()).split()
 	bowTwo = filter(None, [bowTwo[i]+' '+bowTwo[i+1] for i in range(len(bowTwo)-1)])
 	wordSetTwo = dict.fromkeys(wordSet, 0)
@@ -139,8 +145,8 @@ full_df = pd.concat(df_list, axis=1, join='inner')
 full_df['tfidf avg'] = full_df.mean(axis=1)
 full_df['tfidf avg used'] = full_df.apply(avg_cond, axis=1)
 full_df['docs with word'] = full_df.apply(count_docs, axis=1)
-full_df['tfidf max'] = full_df[urllist].max(axis=1)
+full_df['tfidf max'] = full_df[urllist_two].max(axis=1)
 
 file_name = kywd.replace(' ', '_')
 
-full_df.to_csv(file_name + '.csv', encoding='utf-8')
+full_df.to_csv(file_name + '2.csv', encoding='utf-8')

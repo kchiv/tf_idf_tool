@@ -31,7 +31,10 @@ def count_words(tokenized, word_dict):
 	# counts number of times word appears in tokenized list
 	# and iterates dictionary value by 1 for each count
 	for word in tokenized:
-		word_dict[word]+=1
+		try:
+			word_dict[word]+=1
+		except KeyError:
+			pass
 	return word_dict
 
 def computeTF(wordDict, bow):
@@ -39,7 +42,7 @@ def computeTF(wordDict, bow):
 	tfDict = {}
 	bowCount = len(bow)
 	for word, count in wordDict.iteritems():
-		tfDict[word] = count / float(bowCount)
+		tfDict[word] = count / (1 + float(bowCount))
 	return tfDict
 
 def computeIDF(docList):
@@ -55,10 +58,7 @@ def computeIDF(docList):
 
 	# divide N by denominator above, take the log of that
 	for word, val in idfDict.iteritems():
-		if val > 0:
-			idfDict[word] = math.log(N/float(val))
-		else:
-			idfDict[word] = 0
+		idfDict[word] = math.log(N/(1+float(val)))
 
 	return idfDict
 
@@ -71,7 +71,7 @@ def computeTFIDF(tfBow, idfs):
 
 def avg_cond(c):
 	avg_list = []
-	for url in urllist:
+	for url in urllist_two:
 		if c[url] > 0:
 			avg_list.append(c[url])
 	if len(avg_list) > 0:
@@ -81,18 +81,21 @@ def avg_cond(c):
 
 def count_docs(c):
 	count_list = []
-	for url in urllist:
+	for url in urllist_two:
 		if c[url] > 0:
 			count_list.append(1)
 	return len(count_list)
 
 kywd = raw_input('What would you like to search?')
+result_num = int(raw_input('How many results would you like?'))
 
-urllist = google_parser.generate_links(kywd)
+urllist = google_parser.generate_links(kywd, result_num)
 print urllist
+print len(urllist)
 
 # creates set containing one instance of every word that appears across the docs
 wordSet = set()
+urllist_two = []
 
 for url in urllist:
 	# opens web page
@@ -104,25 +107,30 @@ for url in urllist:
 	bow = doc.split(' ')
 	# removes empty strings
 	bow = filter(None, bow)
+	print url, len(bow)
+	if len(bow) > 50:
+		urllist_two.append(url)
 	wordSet = wordSet.union(set(bow))
+
+print urllist_two
 
 
 wordDictList = []
-for url in urllist:
-	bow = filter(None, remove_punc(web_page_parser.text_from_html(url_request(url)).lower()).split(' '))
+for url in urllist_two:
+	bowOne = filter(None, remove_punc(web_page_parser.text_from_html(url_request(url)).lower()).split(' '))
 	wordSetOne = dict.fromkeys(wordSet, 0)
-	wordDict = count_words(bow, wordSetOne)
+	wordDict = count_words(bowOne, wordSetOne)
 	wordDictList.append(wordDict)
 
 idfs = computeIDF(wordDictList)
 
 df_list = []
 # gets body text from web pages and cleans up the text
-for url in urllist:
+for url in urllist_two:
 	bowTwo = filter(None, remove_punc(web_page_parser.text_from_html(url_request(url)).lower()).split(' '))
 	wordSetTwo = dict.fromkeys(wordSet, 0)
 	wordDictTwo = count_words(bowTwo, wordSetTwo)
-	tfBow = computeTF(wordDictTwo, bow)
+	tfBow = computeTF(wordDictTwo, bowTwo)
 	tfidfBow = computeTFIDF(tfBow, idfs)
 	df = pd.DataFrame.from_dict(tfidfBow, orient='index', columns=[url])
 	df_list.append(df)
@@ -136,8 +144,8 @@ full_df = pd.concat(df_list, axis=1, join='inner')
 full_df['tfidf avg'] = full_df.mean(axis=1)
 full_df['tfidf avg used'] = full_df.apply(avg_cond, axis=1)
 full_df['docs with word'] = full_df.apply(count_docs, axis=1)
-full_df['tfidf max'] = full_df[urllist].max(axis=1)
+full_df['tfidf max'] = full_df[urllist_two].max(axis=1)
 
 file_name = kywd.replace(' ', '_')
 
-full_df.to_csv(file_name + '.csv', encoding='utf-8')
+full_df.to_csv(file_name + '1.csv', encoding='utf-8')
