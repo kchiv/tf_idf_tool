@@ -16,6 +16,7 @@ import requests
 
 import web_page_parser
 import google_parser
+import stop_words
 
 def remove_punc(document_string):
 	# removes punctuation from strings
@@ -146,6 +147,13 @@ full_df['tfidf avg'] = full_df.mean(axis=1)
 full_df['tfidf avg used'] = full_df.apply(avg_cond, axis=1)
 full_df['docs with word'] = full_df.apply(count_docs, axis=1)
 full_df['tfidf max'] = full_df[urllist_two].max(axis=1)
+
+# removes additional stop words
+for start_word in stop_words.begins:
+	full_df.drop(full_df[full_df.index.str.startswith(start_word)].index, axis=0, inplace=True)
+
+for end_word in stop_words.ends:
+	full_df.drop(full_df[full_df.index.str.endswith(end_word)].index, axis=0, inplace=True)
 
 file_name = kywd.replace(' ', '_')
 
