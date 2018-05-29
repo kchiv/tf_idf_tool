@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pandas as pd
+import os
 
 import web_page_parser
 import google_parser
@@ -92,4 +93,6 @@ for end_word in stop_words.ends:
 
 file_name = kywd.replace(' ', '_')
 
-full_df.to_csv(file_name + '2.csv', encoding='utf-8')
+cw_directory = os.getcwd() + '/output_files/'
+
+full_df.to_csv(cw_directory + file_name + '2.csv', encoding='utf-8')
