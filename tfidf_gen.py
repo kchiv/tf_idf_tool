@@ -8,66 +8,13 @@
 # - TF*IDF avg (All) - The average TFIDF for the keyword across all documents
 # - TF*IDF max - The max TFIDF that appears in a single document
 
-import math
-import re
 import pandas as pd
-import urllib2
-import requests
+import os
 
 import web_page_parser
 import google_parser
-
-def remove_punc(document_string):
-	# removes punctuation from strings
-	clean = re.sub(r"[!@#$%^&*()-=_+|;':\",.<>?']+", " ", document_string)
-	return clean
-
-def url_request(url):
-	req = requests.get(url, headers={'Accept': 'text/html,application/xhtml+xml,*/*',
-										'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'})
-	return req.text
-
-def count_words(tokenized, word_dict):
-	# counts number of times word appears in tokenized list
-	# and iterates dictionary value by 1 for each count
-	for word in tokenized:
-		try:
-			word_dict[word]+=1
-		except KeyError:
-			pass
-	return word_dict
-
-def computeTF(wordDict, bow):
-	# computes term frequency
-	tfDict = {}
-	bowCount = len(bow)
-	for word, count in wordDict.iteritems():
-		tfDict[word] = count / (1 + float(bowCount))
-	return tfDict
-
-def computeIDF(docList):
-	idfDict = {}
-	N = len(docList)
-
-	# counts the number of documents that contain a word w
-	idfDict = dict.fromkeys(docList[0].keys(),0)
-	for doc in docList:
-		for word, val in doc.iteritems():
-			if val > 0:
-				idfDict[word] += 1
-
-	# divide N by denominator above, take the log of that
-	for word, val in idfDict.iteritems():
-		idfDict[word] = math.log(N/(1+float(val)))
-
-	return idfDict
-
-def computeTFIDF(tfBow, idfs):
-	# computes TF*IDF
-	tfidf = {}
-	for word, val in tfBow.iteritems():
-		tfidf[word] = val * idfs[word]
-	return tfidf
+import stop_words
+from tf_func import remove_punc, url_request, count_words, computeTF, computeIDF, computeTFIDF
 
 def avg_cond(c):
 	avg_list = []
@@ -146,6 +93,15 @@ full_df['tfidf avg used'] = full_df.apply(avg_cond, axis=1)
 full_df['docs with word'] = full_df.apply(count_docs, axis=1)
 full_df['tfidf max'] = full_df[urllist_two].max(axis=1)
 
+# removes additional stop words
+for start_word in stop_words.begins:
+	full_df.drop(full_df[full_df.index.str.startswith(start_word)].index, axis=0, inplace=True)
+
+for end_word in stop_words.ends:
+	full_df.drop(full_df[full_df.index.str.endswith(end_word)].index, axis=0, inplace=True)
+
 file_name = kywd.replace(' ', '_')
 
-full_df.to_csv(file_name + '1.csv', encoding='utf-8')
+cw_directory = os.getcwd() + '/output_files/'
+
+full_df.to_csv(cw_directory + file_name + '1.csv', encoding='utf-8')
